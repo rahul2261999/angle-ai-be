@@ -1,0 +1,40 @@
+{
+  "name": "conversely",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "circular": "madge --extensions ts --ts-config ./tsconfig.json --circular .",
+    "prebuild": "npm run circular && rm -rf ./build",
+    "build": "tsc",
+    "watch": "tsc-watch --noClear -p tsconfig.json --onSuccess \"node build/server.js\"",
+    "dev": "npm run prebuild && npm run build && npm run watch",
+    "uat": "npm run prebuild && npm run build && npm run watch"
+  },
+  "author": "Rahul Saini",
+  "license": "ISC",
+  "dependencies": {
+    "commander": "^13.1.0",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "lodash": "^4.17.21",
+    "mysql2": "^3.12.0",
+    "sequelize": "^6.37.5",
+    "ulid": "^2.3.0",
+    "uuid": "^11.0.5",
+    "winston": "^3.17.0",
+    "winston-daily-rotate-file": "^5.0.0",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.0",
+    "@types/lodash": "^4.17.15",
+    "cors": "^2.8.5",
+    "madge": "^8.0.0",
+    "tsc-watch": "^6.2.1"
+  },
+  "engines": {
+    "node": ">=18.x"
+  }
+}

@@ -1,0 +1,7 @@
+node_modules
+package-lock.json
+build
+logs
+training_data
+.env
+.vscode
