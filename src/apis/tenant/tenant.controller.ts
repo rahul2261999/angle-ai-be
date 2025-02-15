@@ -35,7 +35,7 @@ abstract class TenantController {
 
       const customError = InternalServer.fromError(error);
 
-      response.status(customError.getStatusCode()).json(customError);
+      response.status(customError.getStatusCode()).json(customError.toJson());
     }
   }
 
@@ -68,7 +68,7 @@ abstract class TenantController {
 
       const customError = InternalServer.fromError(error);
 
-      response.status(customError.getStatusCode()).json(customError);
+      response.status(customError.getStatusCode()).json(customError.toJson());
     }
   }
 
@@ -99,7 +99,7 @@ abstract class TenantController {
 
       const customError = InternalServer.fromError(error);
 
-      response.status(customError.getStatusCode()).json(customError);
+      response.status(customError.getStatusCode()).json(customError.toJson());
     }
   }
 
@@ -132,7 +132,7 @@ abstract class TenantController {
 
       const customError = InternalServer.fromError(error);
 
-      response.status(customError.getStatusCode()).json(customError);
+      response.status(customError.getStatusCode()).json(customError.toJson());
     }
   }
 }

@@ -27,8 +27,8 @@ class SqlInstance {
       {
         host: serverConstant.database.sql.host,
         port: serverConstant.database.sql.port,
-        dialect: "mysql",
-        logging: false,
+        dialect: serverConstant.database.sql.dialect,
+        logging: Boolean(serverConstant.database.sql.logging),
       }
     );
   }

@@ -33,16 +33,16 @@ class TenantService {
       const validation = TenantValidation.tenantCreate.safeParse(params);
 
       if (!validation.success) {
-        throw new InternalServer(validation.error.message, { error: validation.error.errors });
+        throw new InternalServer('validation failed', { error: validation.error.issues });
       }
 
       const validatedParams = validation.data;
-
+      const tenantId = ulid();
       const authKey = crypto.randomBytes(32).toString('hex')
 
       const tenantCreateParams: TenantCreateAttributes = {
         name: validatedParams.name,
-        tenantId: ulid(),
+        tenantId,
         authKey,
         status: Status.ACTIVE,
         createdBy: 1,

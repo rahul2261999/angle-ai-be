@@ -25,7 +25,7 @@ const Tenant = sequelize.define<Model<ITenant, TenantCreateAttributes>>(
       key: 'tenant_id',
       allowNull: false,
     },
-    authkey: {
+    authKey: {
       type: DataTypes.STRING,
       key: 'auth_key',
       allowNull: false,
@@ -48,12 +48,14 @@ const Tenant = sequelize.define<Model<ITenant, TenantCreateAttributes>>(
     createdAt: {
       type: DataTypes.DATE,
       key: 'created_at',
-      allowNull: false
+      allowNull: false,
+      defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
     },
     updatedAt: {
       type: DataTypes.DATE,
       key: 'updated_at',
       allowNull: false,
+      defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
     },
   },
   {

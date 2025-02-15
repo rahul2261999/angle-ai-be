@@ -1,5 +1,6 @@
 
 import { config } from "dotenv";
+import { Dialect } from "sequelize";
 config();
 
 export default Object.freeze({
@@ -12,7 +13,9 @@ export default Object.freeze({
       port: Number(process.env.MYSQL_PORT),
       username: process.env.MYSQL_USERNAME,
       password: process.env.MYSQL_PASSWORD,
-      database: process.env.MYSQL_DATABASE
+      database: process.env.MYSQL_DATABASE,
+      dialect: "mysql" as Dialect,
+      logging: process.env.MYSQL_LOGGING || false,
     }
   },
   statusCodes: {

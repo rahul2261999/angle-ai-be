@@ -9,7 +9,10 @@
     "build": "tsc",
     "watch": "tsc-watch --noClear -p tsconfig.json --onSuccess \"node build/server.js\"",
     "dev": "npm run prebuild && npm run build && npm run watch",
-    "uat": "npm run prebuild && npm run build && npm run watch"
+    "uat": "npm run prebuild && npm run build && npm run watch",
+    
+    "migrate": "npm run prebuild  && npm run build && npx sequelize-cli db:migrate",
+    "migrate:undo": "npm run prebuild && npm run build && npx sequelize-cli db:migrate:undo"
   },
   "author": "Rahul Saini",
   "license": "ISC",

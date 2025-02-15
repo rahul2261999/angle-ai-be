@@ -6,7 +6,7 @@ export interface ITenant {
   id: number;
   name: string;
   tenantId: string;
-  authkey: string;
+  authKey: string;
   status: Status;
   createdBy: number;
   updatedBy: number;

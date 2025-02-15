@@ -5,3 +5,4 @@ logs
 training_data
 .env
 .vscode
+.qodo
