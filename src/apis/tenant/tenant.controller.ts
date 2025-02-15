@@ -1,4 +1,4 @@
-import { NextFunction, Request, Response } from "express";
+import { Request, Response } from "express";
 import { ILoggerData } from "../../utils/logger/logger.type";
 import loggerService from "../../utils/logger/logger.service";
 import { tenantService } from "./tenant.service";
@@ -51,12 +51,12 @@ abstract class TenantController {
     try {
       loggerService.info({ ...loggerData, message: 'executing' });
 
-      const body = request.body;
+      const id = +request.params.id;
 
-      const data = await tenantService.createTenant(body);
+      const data = await tenantService.getTenant({ id });
 
       const customResponse = new SuccessResponse({
-        message: 'Tenant created successfully',
+        message: 'Tenant fetched successfully',
         data
       })
 
@@ -82,12 +82,10 @@ abstract class TenantController {
     };
 
     try {
-      const body = request.body;
-
-      const data = await tenantService.createTenant(body);
+      const data = await tenantService.getAllTenant();
 
       const customResponse = new SuccessResponse({
-        message: 'Tenant created successfully',
+        message: 'Tenants fetched successfully',
         data
       })
 
@@ -117,10 +115,49 @@ abstract class TenantController {
 
       const body = request.body;
 
-      const data = await tenantService.createTenant(body);
+      const data = await tenantService.updateTenant({
+        ...body,
+        values: {
+          ...body.values,
+          updatedBy: 1
+        }
+      });
 
       const customResponse = new SuccessResponse({
-        message: 'Tenant created successfully',
+        message: 'Tenant updated successfully',
+        data
+      })
+
+      loggerService.info({ ...loggerData, message: 'executed' });
+
+      response.status(customResponse.statusCode).json(customResponse);
+    } catch (error) {
+      loggerService.error({ ...loggerData, message: 'failed to execute' });
+
+      const customError = InternalServer.fromError(error);
+
+      response.status(customError.getStatusCode()).json(customError.toJson());
+    }
+  }
+
+  public static async deleteTenant(
+    request: Request,
+    response: Response,
+  ) {
+    const loggerData: ILoggerData = {
+      serviceName: 'TenantController',
+      function: 'deleteTenant',
+    };
+
+    try {
+      loggerService.info({ ...loggerData, message: 'executing' });
+
+      const id = +request.params.id;
+
+      const data = await tenantService.deleteTenant({ id });
+
+      const customResponse = new SuccessResponse({
+        message: 'Tenant deleted successfully',
         data
       })
 

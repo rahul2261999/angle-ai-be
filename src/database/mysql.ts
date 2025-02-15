@@ -30,7 +30,7 @@ class SqlInstance {
         dialect: serverConstant.database.sql.dialect,
         logging: Boolean(serverConstant.database.sql.logging),
       }
-    );
+    )
   }
 
   public static getInstance(): SqlInstance {

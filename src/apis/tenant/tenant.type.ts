@@ -33,3 +33,4 @@ export interface TenantUpdateAttributes {
 export type TenantCreateReqPayload  = z.infer<typeof TenantValidation.tenantCreate>
 export type TennatGetReqPayload = z.infer<typeof TenantValidation.tenantGet>
 export type TenantUpdateReqPayload = z.infer<typeof TenantValidation.tenantUpdate>
+export  type TenantDeleteReqPayload = z.infer<typeof TenantValidation.tenantDelete>

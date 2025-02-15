@@ -3,7 +3,7 @@ import { ulid } from "ulid";
 import InternalServer from "../../utils/error/internal_server.error";
 import loggerService from "../../utils/logger/logger.service";
 import { ILoggerData } from "../../utils/logger/logger.type";
-import { ITenant, TenantCreateAttributes, TenantCreateReqPayload, TenantUpdateAttributes, TenantUpdateReqPayload, TennatGetReqPayload as TenantGetReqPayload } from "./tenant.type";
+import { ITenant, TenantCreateAttributes, TenantCreateReqPayload, TenantUpdateAttributes, TenantUpdateReqPayload, TennatGetReqPayload as TenantGetReqPayload, TenantDeleteReqPayload } from "./tenant.type";
 import { tenantRepository } from './tenant.repo';
 import { FindOptions, UpdateOptions } from 'sequelize';
 import { TenantValidation } from './tenant.validation';
@@ -84,7 +84,7 @@ class TenantService {
 
       const findOptions: FindOptions<ITenant> = {
         where: {
-          tenantId: validatedParams.id,
+          id: validatedParams.id,
         },
       };
 
@@ -139,7 +139,7 @@ class TenantService {
       const validatedParams = validation.data;
 
 
-      const tenantUpdateParams: TenantUpdateAttributes = { updatedBy: 1 };
+      const tenantUpdateParams: TenantUpdateAttributes = { updatedBy: validatedParams.values.updatedBy };
       if (validatedParams.values.name) {
         tenantUpdateParams.name = validatedParams.values.name;
       }
@@ -161,6 +161,40 @@ class TenantService {
       loggerService.debug({ ...loggerData, message: `records updated: ${updatedTenant}` });
 
       return updatedTenant
+    } catch (error) {
+      loggerService.error({ ...loggerData, message: 'failed to execute' });
+
+      throw InternalServer.fromError(error);
+    }
+  }
+
+  async deleteTenant(params: TenantDeleteReqPayload): Promise<number> {
+    const loggerData: ILoggerData = {
+      serviceName: 'TenantService',
+      function: 'deleteTenant',
+    };
+
+    try {
+      loggerService.info({ ...loggerData, message: 'executing' });
+
+      const validation = TenantValidation.tenantDelete.safeParse(params);
+
+      if (!validation.success) {
+        throw new InternalServer(validation.error.message, { error: validation.error.errors });
+      }
+
+      const validatedParams = validation.data;
+
+
+      const deletedTenanr = await tenantRepository.delete({
+        where: {
+          id: validatedParams.id,
+        }
+      });
+
+      loggerService.info({ ...loggerData, message: 'executed' });
+
+      return deletedTenanr
     } catch (error) {
       loggerService.error({ ...loggerData, message: 'failed to execute' });
 

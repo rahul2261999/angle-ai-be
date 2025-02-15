@@ -7,7 +7,7 @@ abstract class TenantValidation {
   });
 
   public static tenantGet = z.object({
-    id: z.string({ message: "id can not be empty or null" }),
+    id: z.number({ message: "id can not be empty or null" }),
   })
 
   public static tenantGetAll = z.object({});
@@ -20,9 +20,12 @@ abstract class TenantValidation {
     }),
 
     filter: z.object({
-      id: z.string({ message: "id can not be empty or null" }),
+      id: z.number({ message: "id can not be empty or null" }),
     }).required()
+  });
 
+  public static tenantDelete = z.object({
+    id: z.number({ message: "id can not be empty or null" }),
   })
 }
 

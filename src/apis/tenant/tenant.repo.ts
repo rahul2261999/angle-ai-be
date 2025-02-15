@@ -1,4 +1,4 @@
-import { CreateOptions, FindOptions, UpdateOptions } from "sequelize";
+import { DestroyOptions, FindOptions, UpdateOptions } from "sequelize";
 import InternalServer from "../../utils/error/internal_server.error";
 import loggerService from "../../utils/logger/logger.service";
 import { ILoggerData } from "../../utils/logger/logger.type";
@@ -38,7 +38,7 @@ class TenantRepository {
     }
   }
 
-  public async findOne(params: FindOptions<ITenant>): Promise<ITenant | undefined> {
+  public async findOne(findOptions: FindOptions<ITenant>): Promise<ITenant | undefined> {
     const loggerData: ILoggerData = {
       serviceName: 'TenantRepository',
       function: 'findOne',
@@ -47,7 +47,7 @@ class TenantRepository {
     try {
       loggerService.info({ ...loggerData, message: 'executing' });
 
-      const tenant = await Tenant.findOne(params)
+      const tenant = await Tenant.findOne(findOptions)
 
       loggerService.info({ ...loggerData, message: 'executed' });
 
@@ -59,7 +59,7 @@ class TenantRepository {
     }
   }
 
-  public async findAll(params?: FindOptions<ITenant>): Promise<ITenant[]> {
+  public async findAll(findOptions?: FindOptions<ITenant>): Promise<ITenant[]> {
     const loggerData: ILoggerData = {
       serviceName: 'TenantRepository',
       function: 'findAll',
@@ -68,7 +68,7 @@ class TenantRepository {
     try {
       loggerService.info({ ...loggerData, message: 'executing' });
 
-      const tenant = await Tenant.findAll(params)
+      const tenant = await Tenant.findAll(findOptions)
 
       loggerService.info({ ...loggerData, message: 'executed' });
 
@@ -94,6 +94,27 @@ class TenantRepository {
       loggerService.info({ ...loggerData, message: 'executed' });
 
       return tenant[0];
+    } catch (error) {
+      loggerService.error({ ...loggerData, message: 'failed to execute' }, { error });
+
+      throw new InternalServer("Someting went wrong");
+    }
+  }
+
+  public async delete(options: DestroyOptions<ITenant>): Promise<number> {
+    const loggerData: ILoggerData = {
+      serviceName: 'TenantRepository',
+      function: 'update',
+    };
+
+    try {
+      loggerService.info({ ...loggerData, message: 'executing' });
+
+      const tenant = await Tenant.destroy(options)
+
+      loggerService.info({ ...loggerData, message: 'executed' });
+
+      return tenant;
     } catch (error) {
       loggerService.error({ ...loggerData, message: 'failed to execute' }, { error });
 

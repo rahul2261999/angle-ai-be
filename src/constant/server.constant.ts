@@ -15,7 +15,7 @@ export default Object.freeze({
       password: process.env.MYSQL_PASSWORD,
       database: process.env.MYSQL_DATABASE,
       dialect: "mysql" as Dialect,
-      logging: process.env.MYSQL_LOGGING || false,
+      logging: process.env.MYSQL_LOGGING === 'true',
     }
   },
   statusCodes: {
