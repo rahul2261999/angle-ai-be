@@ -4,9 +4,8 @@ import cors from 'cors'
 import serverConstant from './src/constant/server.constant';
 import loggerService from './src/utils/logger/logger.service';
 import { mysql } from './src/database/mysql';
-import { tenantRoute } from './src/apis/tenant/tenant.route';
-import { healthRouter } from './src/apis/health/health.router';
 import { asyncContextStore } from './src/utils/helper/async_context_store.util';
+import { mainRouter } from './src/apis/main.router';
 
 class ExpressServer {
   private static instance: ExpressServer;
@@ -49,8 +48,7 @@ class ExpressServer {
         next();
       })
     })
-    this.app.use('/health', healthRouter)
-    this.app.use('/main', tenantRoute);
+    this.app.use('/api', mainRouter)
 
     loggerService.info("initilizeRoutes complete");
   }
