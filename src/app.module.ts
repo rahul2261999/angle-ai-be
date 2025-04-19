@@ -7,6 +7,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigurationService } from './core/configuration/configuration.service';
 import { LoggerModule } from './lib/logger/logger.module';
 import { AlsModule } from './core/common/als/als.module';
+import { HealthModule } from './services/health/health.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { AlsModule } from './core/common/als/als.module';
     }),
     LoggerModule,
     AlsModule,
+    HealthModule,
     TenantModule,
   ],
   controllers: [AppController],

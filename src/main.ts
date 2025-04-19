@@ -11,7 +11,7 @@ async function bootstrap() {
   const loggerService = app.get(LoggingService);
   const alsService = app.get(AlsService);
 
-  app.setGlobalPrefix('/app/api');
+  app.setGlobalPrefix('/main/api');
 
   app.enableVersioning({
     type: VersioningType.URI,
