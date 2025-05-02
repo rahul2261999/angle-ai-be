@@ -8,6 +8,9 @@ import { ConfigurationService } from './core/configuration/configuration.service
 import { LoggerModule } from './lib/logger/logger.module';
 import { AlsModule } from './core/common/als/als.module';
 import { HealthModule } from './services/health/health.module';
+import { ChatModelService } from './lib/chat_models/chat-modle.service';
+import { AgentControllerModule } from './services/agent_controller/agent_controller.module';
+import { ChatModelsModule } from './lib/chat_models/chat-models.module';
 
 @Module({
   imports: [
@@ -22,8 +25,10 @@ import { HealthModule } from './services/health/health.module';
     AlsModule,
     HealthModule,
     TenantModule,
+    AgentControllerModule,
+    ChatModelsModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, ChatModelService],
 })
 export class AppModule {}

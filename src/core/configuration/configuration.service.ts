@@ -15,4 +15,20 @@ export class ConfigurationService {
 
     return uri;
   }
+
+  getMistralConfig() {
+    const modelName = this.configService.get<string>('MISTRAL_MODEL_NAME');
+    const apiKey = this.configService.get<string>('MISTRAL_API_CONFIG');
+
+    return {
+      modelName,
+      apiKey,
+    };
+  }
+
+  getRagServiceConfig() {
+    const baseurl = this.configService.get('RAG_SERVICE_BASE_URL');
+
+    return { baseurl };
+  }
 }

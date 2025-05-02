@@ -5,6 +5,7 @@ import Joi from 'joi';
 import path from 'path';
 import fs from 'fs';
 import yaml from 'js-yaml';
+import { AxiosModule } from 'src/utils/axios_instances/axios.module';
 
 @Global()
 @Module({
@@ -42,6 +43,11 @@ import yaml from 'js-yaml';
         NODE_ENV: Joi.string().valid('local', 'staging', 'uat').required(),
 
         MONGODB_ATLAS_URI: Joi.string().required(),
+
+        MISTRAL_MODEL_NAME: Joi.string().required(),
+        MISTRAL_API_KEY: Joi.string().required(),
+
+        RAG_SERVICE_BASE_URL: Joi.string().required(),
 
         // =============== yaml config =============== //
       }),
