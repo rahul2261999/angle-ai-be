@@ -21,7 +21,7 @@ export class AuthenticationService {
 
   async signup(signupDto: SignupDto) {
     const loggerData: ILoggerData = {
-      serviceName: 'SignupService',
+      serviceName: 'AuthenticationService',
       function: 'signup',
       message: 'Signing up a new user',
     }
@@ -61,7 +61,7 @@ export class AuthenticationService {
 
   async signin(signinDto: SigninDto) {
     const loggerData: ILoggerData = {
-      serviceName: 'SigninService',
+      serviceName: 'AuthenticationService',
       function: 'signin',
       message: 'Signing in a user',
     }

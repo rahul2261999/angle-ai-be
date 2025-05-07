@@ -11,6 +11,9 @@ async function bootstrap() {
   const loggerService = app.get(LoggingService);
   const alsService = app.get(AlsService);
 
+  app.enableCors({
+    origin: '*',
+  });
   app.setGlobalPrefix('/main/api');
 
   app.enableVersioning({
@@ -25,7 +28,9 @@ async function bootstrap() {
   );
 
   app.useGlobalFilters(new GlobalExceptionFilter(loggerService, alsService));
-  await app.listen(process.env.PORT ?? 8001);
+  await app.listen(process.env.PORT ?? 8001, () => {
+    loggerService.notice(`Server is running on port ${process.env.PORT ?? 8001}`);
+  });
 }
 
 void bootstrap();

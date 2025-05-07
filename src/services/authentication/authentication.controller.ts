@@ -5,7 +5,10 @@ import SuccessResponse from 'src/core/response/response.util';
 import { plainToInstance } from 'class-transformer';
 import { UserResponseDto } from '../user/dto/user-response.dto';
 import { SignupDto } from './dto/signup.dto';
-@Controller('authentication')
+@Controller({
+  path: 'authentication',
+  version: '1',
+})
 export class AuthenticationController {
   constructor(private readonly authenticationService: AuthenticationService) { }
 
