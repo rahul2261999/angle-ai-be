@@ -6,6 +6,9 @@ import {
   Model,
   SortOrder,
   UpdateQuery,
+  PopulateOptions,
+  QueryOptions as MongooseQueryOptions,
+  ClientSession,
 } from 'mongoose';
 import { ILoggerData } from 'src/lib/logger/logger.type';
 import InternalServer from '../error/internal-server.error';
@@ -15,36 +18,88 @@ export interface QueryOptions<T> {
   sort?: { [key in keyof T]?: SortOrder };
   skip?: number;
   limit?: number;
-  select?: string | Record<string, number | boolean | object>;
+  select?: string | string[] | Record<string, number | boolean | object>;
+  populate?: PopulateOptions | PopulateOptions[];
+  lean?: boolean;
+  new?: boolean;
+  upsert?: boolean;
+  runValidators?: boolean;
+  setDefaultsOnInsert?: boolean;
+  timestamps?: boolean;
+  projection?: Record<string, number | boolean | object>;
+  session?: ClientSession;
 }
 
-export interface IBaseRepository<T extends Document> {
-  create(data: Partial<T>): Promise<T>;
-  findOne(filter: FilterQuery<T>, projection?: any): Promise<T | null>;
+export interface IBaseRepository<C, T extends Document> {
+  create(data: C, options?: QueryOptions<T>): Promise<T>;
+  findOne(filter: FilterQuery<T>, options?: QueryOptions<T>): Promise<T | null>;
   findMany(
     filter: FilterQuery<T>,
     options?: QueryOptions<T>,
-    projection?: any,
   ): Promise<T[]>;
-  updateOne(filter: FilterQuery<T>, update: UpdateQuery<T>): Promise<T | null>;
-  updateMany(filter: FilterQuery<T>, update: UpdateQuery<T>): Promise<boolean>;
-  deleteOne(filter: FilterQuery<T>): Promise<boolean>;
-  deleteMany(filter: FilterQuery<T>): Promise<boolean>;
-  bulkCreate(data: Partial<T>[]): Promise<T[]>;
+  updateOne(
+    filter: FilterQuery<T>,
+    update: UpdateQuery<T>,
+    options?: QueryOptions<T>,
+  ): Promise<T | null>;
+  updateMany(
+    filter: FilterQuery<T>,
+    update: UpdateQuery<T>,
+    options?: QueryOptions<T>,
+  ): Promise<boolean>;
+  deleteOne(filter: FilterQuery<T>, options?: QueryOptions<T>): Promise<boolean>;
+  deleteMany(filter: FilterQuery<T>, options?: QueryOptions<T>): Promise<boolean>;
+  bulkCreate(data: C[], options?: QueryOptions<T>): Promise<T[]>;
   bulkUpdate(
     updates: Array<{ filter: FilterQuery<T>; update: UpdateQuery<T> }>,
+    options?: QueryOptions<T>,
   ): Promise<boolean>;
+  count(filter: FilterQuery<T>, options?: QueryOptions<T>): Promise<number>;
+  exists(filter: FilterQuery<T>, options?: QueryOptions<T>): Promise<boolean>;
 }
 
-export abstract class BaseRepository<T extends Document>
-  implements IBaseRepository<T>
+export abstract class BaseRepository<C, T extends Document>
+  implements IBaseRepository<C, T>
 {
   constructor(
     protected readonly model: Model<T>,
     protected readonly loggerService: LoggingService,
   ) {}
 
-  async create(data: Partial<T>): Promise<T> {
+  protected applyQueryOptions(query: any, options?: QueryOptions<T>): void {
+    if (!options) {
+      return;
+    }
+
+    if (options.skip !== undefined) {
+      query.skip(options.skip);
+    }
+
+    if (options.limit !== undefined) {
+      query.limit(options.limit);
+    }
+
+    if (options.sort) {
+      query.sort(options.sort as any);
+    }
+
+    if (options.select) {
+      query.select(options.select);
+    }
+
+    if (options.populate) {
+      query.populate(options.populate);
+    }
+
+    if (options.lean) {
+      query.lean();
+    }
+
+    if (options.session) {
+      query.session(options.session);
+    }
+  }
+  async create(data: C, options?: QueryOptions<T>): Promise<T> {
     const loggerData: ILoggerData = {
       serviceName: this.constructor.name,
       function: 'create',
@@ -54,7 +109,7 @@ export abstract class BaseRepository<T extends Document>
     try {
       this.loggerService.info(loggerData);
       const entity = new this.model(data);
-      const result = await entity.save();
+      const result = await entity.save({ session: options?.session });
       this.loggerService.info({ ...loggerData, message: 'executed' });
       return result;
     } catch (error) {
@@ -63,7 +118,7 @@ export abstract class BaseRepository<T extends Document>
     }
   }
 
-  async findOne(filter: FilterQuery<T>, projection?: any): Promise<T | null> {
+  async findOne(filter: FilterQuery<T>, options?: QueryOptions<T>): Promise<T | null> {
     const loggerData: ILoggerData = {
       serviceName: this.constructor.name,
       function: 'findOne',
@@ -72,7 +127,9 @@ export abstract class BaseRepository<T extends Document>
 
     try {
       this.loggerService.info(loggerData);
-      const result = await this.model.findOne(filter, projection).exec();
+      const query = this.model.findOne(filter, options?.projection);
+      this.applyQueryOptions(query, options);
+      const result = await query.exec();
       this.loggerService.info({ ...loggerData, message: 'executed' });
       return result;
     } catch (error) {
@@ -84,7 +141,6 @@ export abstract class BaseRepository<T extends Document>
   async findMany(
     filter: FilterQuery<T>,
     options?: QueryOptions<T>,
-    projection?: any,
   ): Promise<T[]> {
     const loggerData: ILoggerData = {
       serviceName: this.constructor.name,
@@ -94,26 +150,8 @@ export abstract class BaseRepository<T extends Document>
 
     try {
       this.loggerService.info(loggerData);
-      const query = this.model.find(filter, projection);
-
-      if (options) {
-        if (options.skip !== undefined) {
-          query.skip(options.skip);
-        }
-
-        if (options.limit !== undefined) {
-          query.limit(options.limit);
-        }
-
-        if (options.sort) {
-          query.sort(options.sort as any);
-        }
-
-        if (options.select) {
-          query.select(options.select);
-        }
-      }
-
+      const query = this.model.find(filter, options?.projection);
+      this.applyQueryOptions(query, options);
       const result = await query.exec();
       this.loggerService.info({ ...loggerData, message: 'executed' });
       return result;
@@ -126,6 +164,7 @@ export abstract class BaseRepository<T extends Document>
   async updateOne(
     filter: FilterQuery<T>,
     update: UpdateQuery<T>,
+    options?: QueryOptions<T>,
   ): Promise<T | null> {
     const loggerData: ILoggerData = {
       serviceName: this.constructor.name,
@@ -135,9 +174,17 @@ export abstract class BaseRepository<T extends Document>
 
     try {
       this.loggerService.info(loggerData);
-      const result = await this.model
-        .findOneAndUpdate(filter, update, { new: true })
-        .exec();
+      const queryOptions: MongooseQueryOptions = {
+        new: options?.new ?? true,
+        upsert: options?.upsert ?? false,
+        runValidators: options?.runValidators ?? false,
+        setDefaultsOnInsert: options?.setDefaultsOnInsert ?? false,
+        session: options?.session,
+      };
+
+      const query = this.model.findOneAndUpdate(filter, update, queryOptions);
+      this.applyQueryOptions(query, options);
+      const result = await query.exec();
       this.loggerService.info({ ...loggerData, message: 'executed' });
       return result;
     } catch (error) {
@@ -149,6 +196,7 @@ export abstract class BaseRepository<T extends Document>
   async updateMany(
     filter: FilterQuery<T>,
     update: UpdateQuery<T>,
+    options?: QueryOptions<T>,
   ): Promise<boolean> {
     const loggerData: ILoggerData = {
       serviceName: this.constructor.name,
@@ -158,7 +206,9 @@ export abstract class BaseRepository<T extends Document>
 
     try {
       this.loggerService.info(loggerData);
-      const result = await this.model.updateMany(filter, update).exec();
+      const query = this.model.updateMany(filter, update);
+      this.applyQueryOptions(query, options);
+      const result = await query.exec();
       this.loggerService.info({ ...loggerData, message: 'executed' });
       return result.modifiedCount > 0;
     } catch (error) {
@@ -167,7 +217,7 @@ export abstract class BaseRepository<T extends Document>
     }
   }
 
-  async deleteOne(filter: FilterQuery<T>): Promise<boolean> {
+  async deleteOne(filter: FilterQuery<T>, options?: QueryOptions<T>): Promise<boolean> {
     const loggerData: ILoggerData = {
       serviceName: this.constructor.name,
       function: 'deleteOne',
@@ -176,7 +226,9 @@ export abstract class BaseRepository<T extends Document>
 
     try {
       this.loggerService.info(loggerData);
-      const result = await this.model.deleteOne(filter).exec();
+      const query = this.model.deleteOne(filter);
+      this.applyQueryOptions(query, options);
+      const result = await query.exec();
       this.loggerService.info({ ...loggerData, message: 'executed' });
       return result.deletedCount === 1;
     } catch (error) {
@@ -185,7 +237,7 @@ export abstract class BaseRepository<T extends Document>
     }
   }
 
-  async deleteMany(filter: FilterQuery<T>): Promise<boolean> {
+  async deleteMany(filter: FilterQuery<T>, options?: QueryOptions<T>): Promise<boolean> {
     const loggerData: ILoggerData = {
       serviceName: this.constructor.name,
       function: 'deleteMany',
@@ -194,7 +246,9 @@ export abstract class BaseRepository<T extends Document>
 
     try {
       this.loggerService.info(loggerData);
-      const result = await this.model.deleteMany(filter).exec();
+      const query = this.model.deleteMany(filter);
+      this.applyQueryOptions(query, options);
+      const result = await query.exec();
       this.loggerService.info({ ...loggerData, message: 'executed' });
       return result.deletedCount > 0;
     } catch (error) {
@@ -203,7 +257,7 @@ export abstract class BaseRepository<T extends Document>
     }
   }
 
-  async bulkCreate(data: Partial<T>[]): Promise<T[]> {
+  async bulkCreate(data: C[], options?: QueryOptions<T>): Promise<T[]> {
     const loggerData: ILoggerData = {
       serviceName: this.constructor.name,
       function: 'bulkCreate',
@@ -212,7 +266,7 @@ export abstract class BaseRepository<T extends Document>
 
     try {
       this.loggerService.info(loggerData);
-      const result = await this.model.insertMany(data);
+      const result = await this.model.insertMany(data, { session: options?.session });
       this.loggerService.info({ ...loggerData, message: 'executed' });
       return result as unknown as T[];
     } catch (error) {
@@ -223,6 +277,7 @@ export abstract class BaseRepository<T extends Document>
 
   async bulkUpdate(
     updates: Array<{ filter: FilterQuery<T>; update: UpdateQuery<T> }>,
+    options?: QueryOptions<T>,
   ): Promise<boolean> {
     const loggerData: ILoggerData = {
       serviceName: this.constructor.name,
@@ -244,6 +299,7 @@ export abstract class BaseRepository<T extends Document>
 
       const result = await this.model.bulkWrite(
         bulkOps as unknown as AnyBulkWriteOperation<any>[],
+        { session: options?.session },
       );
       this.loggerService.info({ ...loggerData, message: 'executed' });
       return result.modifiedCount > 0;
@@ -265,6 +321,46 @@ export abstract class BaseRepository<T extends Document>
       const data = await this.model.bulkWrite(params as any);
       this.loggerService.info({ ...loggerData, message: 'executed' });
       return data;
+    } catch (error) {
+      this.loggerService.error({ ...loggerData, message: 'failed' }, { error });
+      throw new InternalServer('something went wrong');
+    }
+  }
+
+  async count(filter: FilterQuery<T>, options?: QueryOptions<T>): Promise<number> {
+    const loggerData: ILoggerData = {
+      serviceName: this.constructor.name,
+      function: 'count',
+      message: 'executing',
+    };
+
+    try {
+      this.loggerService.info(loggerData);
+      const query = this.model.countDocuments(filter);
+      this.applyQueryOptions(query, options);
+      const result = await query.exec();
+      this.loggerService.info({ ...loggerData, message: 'executed' });
+      return result;
+    } catch (error) {
+      this.loggerService.error({ ...loggerData, message: 'failed' }, { error });
+      throw new InternalServer('something went wrong');
+    }
+  }
+
+  async exists(filter: FilterQuery<T>, options?: QueryOptions<T>): Promise<boolean> {
+    const loggerData: ILoggerData = {
+      serviceName: this.constructor.name,
+      function: 'exists',
+      message: 'executing',
+    };
+
+    try {
+      this.loggerService.info(loggerData);
+      const query = this.model.exists(filter);
+      this.applyQueryOptions(query, options);
+      const result = await query.exec();
+      this.loggerService.info({ ...loggerData, message: 'executed' });
+      return !!result;
     } catch (error) {
       this.loggerService.error({ ...loggerData, message: 'failed' }, { error });
       throw new InternalServer('something went wrong');

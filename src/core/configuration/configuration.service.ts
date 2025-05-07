@@ -31,4 +31,10 @@ export class ConfigurationService {
 
     return { baseurl };
   }
+
+  getAuthJwtConfig() {
+    const secret = this.configService.get('JWT_SECRET');
+
+    return { secret, expiresIn: '1h' };
+  }
 }

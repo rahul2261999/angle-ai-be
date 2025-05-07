@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class AnswerDto {
   @IsString()
@@ -12,4 +12,8 @@ export class AnswerDto {
   @IsString()
   @IsNotEmpty()
   knowledgebaseId: string;
+
+  @IsOptional()
+  @IsNotEmpty()
+  responseSchema?: string
 }

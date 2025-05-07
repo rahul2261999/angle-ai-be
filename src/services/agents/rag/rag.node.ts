@@ -119,11 +119,16 @@ export class RagNodes {
         `You are a helpful assistant. Given the context below, 
         answer the question strictly based on the provided information. 
         Ensure the response does not include any external knowledge. 
+        
         If the context does not contain sufficient information, 
-        give response such as: 'I'm unable to find the answer based on the given information. Could you please clarify your question?'
-
-        Question: "{question}"
+        reply as: 'I'm unable to find the answer based on the given information. Could you please clarify your question?'
+        
+        Give the response strictly as per the response schema provided do not add anything unnecessary.
+        Do not include any Markdown formatting (such as triple backticks or json labels). Only return raw JSON without wrapping it in any code blocks.
+        
+        Question: "{question}"w
         Context: {context}
+        ResponseSchema: {responseSchema}
         `,
       );
 
@@ -136,6 +141,7 @@ export class RagNodes {
       const response = await chain.invoke({
         question,
         context,
+        responseSchema: state.responseSchema
       });
 
       this.loggerService.info({ ...loggerData, message: 'executed' });
@@ -143,6 +149,10 @@ export class RagNodes {
       return {
         messages: [new AIMessage(response)],
         answer: response,
+        retries: {
+          ...state.retries,
+          current: state.retries.current + 1
+        }
       };
     } catch (error) {
       this.loggerService.error(
@@ -162,6 +172,12 @@ export class RagNodes {
     try {
       this.loggerService.info({ ...loggerData, message: 'executing' });
 
+      if(state.retries.max === state.retries.current) {
+        return 'yes'
+      } else {
+       state
+      }
+
       const { messages } = state;
 
       const prompt = ChatPromptTemplate.fromTemplate(
@@ -178,11 +194,7 @@ export class RagNodes {
         response: messages[messages.length - 1].content as string,
       });
 
-      this.loggerService.info({
-        ...loggerData,
-        message: 'executed',
-        additionalArgs: { score },
-      });
+      
 
       // eslint-disable-next-line @typescript-eslint/no-base-to-string
       return score.content.toString().toLowerCase();

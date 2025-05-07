@@ -1,12 +1,12 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
 import { Status } from 'src/core/constants/global.enum';
-
+import { BaseSchema } from 'src/core/schema/base.schema';
 @Schema({
   collection: 'tenants',
   timestamps: true,
 })
-export class Tenant {
+export class Tenant extends BaseSchema {
   @Prop({ required: true })
   name: string;
 
@@ -28,18 +28,6 @@ export class Tenant {
 
   @Prop({ required: true })
   updatedBy: number;
-
-  @Prop({
-    type: Date,
-    default: Date.now,
-  })
-  createdAt: Date;
-
-  @Prop({
-    type: Date,
-    default: Date.now,
-  })
-  updatedAt: Date;
 }
 
 export type TenantDocument = Tenant & Document;

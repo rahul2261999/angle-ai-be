@@ -11,5 +11,6 @@ import { Tenant, TenantSchema } from './schema/tenant.schema';
   ],
   controllers: [TenantController],
   providers: [TenantService, TenantRepository],
+  exports: [TenantService],
 })
 export class TenantModule {}

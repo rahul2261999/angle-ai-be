@@ -1,6 +1,6 @@
 import { BaseMessage } from '@langchain/core/messages';
 import { Annotation } from '@langchain/langgraph';
-import {  TenantState } from './rag.type';
+import {  Retries, TenantState } from './rag.type';
 
 export const InitialGraphStateSchema = Annotation.Root({
   messages: Annotation<BaseMessage[]>({
@@ -12,6 +12,8 @@ export const InitialGraphStateSchema = Annotation.Root({
     default: () => '',
     value: (x, y) => y,
   }),
+  responseSchema: Annotation<string>(),
+  retries: Annotation<Retries>()
 });
 
 export type GraphStateType = typeof InitialGraphStateSchema.State;

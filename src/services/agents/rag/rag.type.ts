@@ -13,3 +13,8 @@ export interface Embedding {
   source: string;
   revelanceScore: number;
 }
+
+export interface Retries {
+  max: number
+  current: number
+}

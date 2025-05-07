@@ -6,7 +6,7 @@ import { Tenant, TenantDocument } from './schema/tenant.schema';
 import { LoggingService } from 'src/lib/logger/logger.service';
 
 @Injectable()
-export class TenantRepository extends BaseRepository<TenantDocument> {
+export class TenantRepository extends BaseRepository<Tenant, TenantDocument> {
   constructor(
     @InjectModel(Tenant.name)
     readonly tenantModel: Model<TenantDocument>,

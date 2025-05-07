@@ -57,7 +57,7 @@ export class RagService {
     }
   }
 
-  public async runFlow(userInput: string, tenant: TenantState) {
+  public async runFlow(userInput: string, tenant: TenantState, responseSchema: string) {
     const loggerData: ILoggerData = {
       serviceName: 'RagService',
       function: 'runFlow',
@@ -71,6 +71,11 @@ export class RagService {
         messages: [new HumanMessage(userInput)],
         tenant: tenant,
         answer: '',
+        responseSchema,
+        retries: {
+          max: 3,
+          current: 0
+        }
       };
 
       const configurable = {
@@ -81,7 +86,7 @@ export class RagService {
 
       this.loggerService.info({ ...loggerData, message: 'executed' });
 
-      return result.answer as GraphStateType['answer'];
+      return JSON.parse(result.answer) as GraphStateType['answer'];
     } catch (error) {
       this.loggerService.error(
         { ...loggerData, message: 'failed to execute' },

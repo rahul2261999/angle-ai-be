@@ -35,8 +35,8 @@ export class TenantService {
         tenantId,
         authKey,
         status: Status.ACTIVE,
-        createdBy: 1, // TODO: Get from auth context
-        updatedBy: 1, // TODO: Get from auth context,
+        createdBy: 1, 
+        updatedBy: 1,
       });
 
       this.loggerService.info({
