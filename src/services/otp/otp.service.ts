@@ -57,7 +57,15 @@ export class OtpService {
       const otp = Math.floor(100000 + Math.random() * 900000).toString();
       const expiresAt = new Date(Date.now() + 1000 * 60 * 5);
 
-      const otpRecord = await this.otpRepo.upsertOtp({ email, otp, expiresAt });
+      const getOtpRecord = await this.otpRepo.findByEmail(email);
+
+      const otpRecord = await this.otpRepo.upsertOtp({ 
+        email, 
+        otp, 
+        expiresAt,
+        count: getOtpRecord?.count || 0,
+        lastSentAt: new Date(),
+      });
 
       return otpRecord;
     } catch (error) {

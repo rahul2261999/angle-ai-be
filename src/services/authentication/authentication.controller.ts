@@ -42,6 +42,14 @@ export class AuthenticationController {
     )
   }
 
+  @Post('otp/resend')
+  @UseGuards(AuthGuard)
+  async resendOtp(@User() user: UserJwt) {
+    const data = await this.authenticationService.resendOtp(user.email);
+
+    return new SuccessResponse('OTP resent to user email', { statusCode: HttpStatus.OK, data });
+  }
+
   @Post('verify')
   @UseGuards(AuthGuard)
   async verifyOtp(@Body() verifyOtpDto: ValidateOtpDto, @User() user: UserJwt) {

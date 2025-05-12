@@ -14,6 +14,12 @@ export class Otp {
 
   @Prop({ required: true })
   expiresAt: Date;  
+
+  @Prop({ required: true, default: 0 })
+  count: number;
+
+  @Prop({ required: true, default: Date.now() })
+  lastSentAt: Date; 
 }
 
 export const OtpSchema = SchemaFactory.createForClass(Otp);

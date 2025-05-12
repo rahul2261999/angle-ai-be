@@ -25,7 +25,7 @@ export class AuthenticationService {
     private readonly otpService: OtpService,
     private readonly configurationService: ConfigurationService,
     @Inject(EMAIL_PROVIDER) private readonly emailProvider: EmailProvider,
-  ) {}
+  ) { }
 
   async signup(signupDto: SignupDto) {
     const loggerData: ILoggerData = {
@@ -36,7 +36,7 @@ export class AuthenticationService {
 
     try {
       this.loggerService.info(loggerData);
-      
+
       const createdTenant = await this.tenantService.create({
         name: 'Default'
       });
@@ -83,13 +83,13 @@ export class AuthenticationService {
         throw new BadRequest('User not found');
       }
 
-      if(user.status !== UserStatus.ACTIVE) {
+      if (user.status !== UserStatus.ACTIVE) {
         throw new BadRequest(`User is curreently ${user.status}`);
       }
 
       const isPasswordValid = await user.validatePassword(signinDto.password);
 
-      if(!isPasswordValid) {
+      if (!isPasswordValid) {
         throw new BadRequest('Please enter correct password');
       }
 
@@ -119,7 +119,60 @@ export class AuthenticationService {
         token: `Bearer ${token}`,
         user,
       }
-      
+
+    } catch (error) {
+      this.loggerService.error(loggerData);
+
+      throw error;
+    }
+  }
+
+  async resendOtp(email: string) {
+    const loggerData: ILoggerData = {
+      serviceName: 'AuthenticationService',
+      function: 'resendOtp',
+      message: 'Resending OTP to user',
+    }
+
+    try {
+      this.loggerService.info(loggerData);
+
+      const user = await this.userService.getUserByEmail(email);
+
+      if (!user) {
+        throw new BadRequest('User not found');
+      }
+
+      if (user.status !== UserStatus.ACTIVE) {
+        throw new BadRequest(`User is curreently ${user.status}`);
+      }
+
+      const otp = await this.otpService.generateOtp(user.email);
+
+      const emailOptions: EmailOptions = {
+        to: {
+          email: user.email,
+        },
+        subject: 'OTP for login',
+        text: `Your OTP for login is ${otp.otp}`,
+      }
+
+      await this.emailProvider.sendEmail(emailOptions);
+      this.loggerService.info({ ...loggerData, message: 'OTP sent to user email' });
+
+      const jwtPayload: UserJwt = {
+        tenantId: user.tenantId,
+        userId: user.id,
+        email: user.email,
+      }
+
+      const otpJwtConfig = this.configurationService.getOtpJwtConfig();
+      const token = await this.jwtService.signAsync(jwtPayload, { secret: otpJwtConfig.secret, expiresIn: otpJwtConfig.expiresIn });
+
+      return {
+        token: `Bearer ${token}`,
+      }
+
     } catch (error) {
       this.loggerService.error(loggerData);
 
@@ -139,13 +192,13 @@ export class AuthenticationService {
 
       const validOtp = await this.otpService.validateOtp(user.email, otp);
 
-      if(!validOtp) {
+      if (!validOtp) {
         throw new BadRequest('Oops! Wrong OTP');
       }
 
       await this.userService.internalUpdateUser(
         { verificationStatus: VerificationStatus.VERIFIED },
-        { _id : new mongoose.Types.ObjectId(user.userId) }
+        { _id: new mongoose.Types.ObjectId(user.userId) }
       );
 
       await this.otpService.deleteOtp(user.email);
