@@ -192,8 +192,8 @@ export class AuthenticationService {
 
       const validOtp = await this.otpService.validateOtp(user.email, otp);
 
-      if (!validOtp) {
-        throw new BadRequest('Oops! Wrong OTP');
+      if (!validOtp.isValid) {
+        throw new BadRequest(validOtp.message);
       }
 
       await this.userService.internalUpdateUser(

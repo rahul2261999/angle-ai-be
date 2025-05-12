@@ -24,18 +24,18 @@ export class OtpService {
       const otpRecord = await this.otpRepo.findByEmail(email);
 
       if (!otpRecord) {
-        return false;
+        return { isValid: false, message: 'OTP not found' };
       }
 
       if (otpRecord.otp !== inputOtp) {
-        return false;
+        return { isValid: false, message: 'Invalid OTP' };
       }
 
       if (otpRecord.expiresAt < new Date()) {
-        return false;
+        return { isValid: false, message: 'OTP expired' };
       }
 
-      return true;
+      return { isValid: true, message: 'OTP is valid' };
     } catch (error) {
       this.loggerService.error(loggerData);
 
