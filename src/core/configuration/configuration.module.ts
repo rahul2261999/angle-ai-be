@@ -50,6 +50,10 @@ import { AxiosModule } from 'src/utils/axios_instances/axios.module';
         RAG_SERVICE_BASE_URL: Joi.string().required(),
 
         // =============== yaml config =============== //
+        email_provider: Joi.object({
+          default_from: Joi.string().required(),
+          default_from_name: Joi.string().required(),
+        }),
       }),
       envFilePath: '.env',
     }),

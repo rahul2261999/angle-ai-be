@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { UserService } from '../user/user.service';
 import { TenantService } from '../tenant/tenant.service';
 import { LoggingService } from 'src/lib/logger/logger.service';
@@ -9,7 +9,12 @@ import { UserStatus, VerificationStatus } from '../user/user.type';
 import BadRequest from 'src/core/error/bad-request';
 import { SigninDto } from './dto/signin.dto';
 import { JwtService } from '@nestjs/jwt';
-import { IJwtPayload } from './authentication.types';
+import { UserJwt } from './authentication.types';
+import { ConfigurationService } from 'src/core/configuration/configuration.service';
+import { OtpService } from '../otp/otp.service';
+import mongoose from 'mongoose';
+import { EMAIL_PROVIDER, EmailOptions } from 'src/lib/email_provider/email_provider.type';
+import { EmailProvider } from 'src/lib/email_provider/email_provider.type';
 @Injectable()
 export class AuthenticationService {
   constructor(
@@ -17,6 +22,9 @@ export class AuthenticationService {
     private readonly tenantService: TenantService,
     private readonly loggerService: LoggingService,
     private readonly jwtService: JwtService,
+    private readonly otpService: OtpService,
+    private readonly configurationService: ConfigurationService,
+    @Inject(EMAIL_PROVIDER) private readonly emailProvider: EmailProvider,
   ) {}
 
   async signup(signupDto: SignupDto) {
@@ -85,19 +93,76 @@ export class AuthenticationService {
         throw new BadRequest('Please enter correct password');
       }
 
-      const jwtPayload: IJwtPayload = {
+      const otp = await this.otpService.generateOtp(user.email);
+
+      const emailOptions: EmailOptions = {
+        to: {
+          email: user.email,
+        },
+        subject: 'OTP for login',
+        text: `Your OTP for login is ${otp.otp}`,
+      }
+
+      await this.emailProvider.sendEmail(emailOptions);
+      this.loggerService.info({ ...loggerData, message: 'OTP sent to user email' });
+
+      const jwtPayload: UserJwt = {
         tenantId: user.tenantId,
         userId: user.id,
         email: user.email,
       }
 
-      const token = await this.jwtService.signAsync(jwtPayload);
-      
+      const otpJwtConfig = this.configurationService.getOtpJwtConfig();
+      const token = await this.jwtService.signAsync(jwtPayload, { secret: otpJwtConfig.secret, expiresIn: otpJwtConfig.expiresIn });
+
       return {
-        token,
+        token: `Bearer ${token}`,
         user,
       }
       
+    } catch (error) {
+      this.loggerService.error(loggerData);
+
+      throw error;
+    }
+  }
+
+  async verifyOtp(otp: string, user: UserJwt) {
+    const loggerData: ILoggerData = {
+      serviceName: 'AuthenticationService',
+      function: 'verifyOtp',
+      message: 'Verifying OTP',
+    }
+
+    try {
+      this.loggerService.info(loggerData);
+
+      const validOtp = await this.otpService.validateOtp(user.email, otp);
+
+      if(!validOtp) {
+        throw new BadRequest('Oops! Wrong OTP');
+      }
+
+      await this.userService.internalUpdateUser(
+        { verificationStatus: VerificationStatus.VERIFIED },
+        { _id : new mongoose.Types.ObjectId(user.userId) }
+      );
+
+      await this.otpService.deleteOtp(user.email);
+
+      this.loggerService.info({ ...loggerData, message: 'OTP verified successfully' });
+
+      const authJwtConfig = this.configurationService.getAuthJwtConfig();
+
+      const jwtPayload: UserJwt = {
+        tenantId: user.tenantId,
+        userId: user.userId,
+        email: user.email,
+      }
+
+      const token = await this.jwtService.signAsync(jwtPayload, { secret: authJwtConfig.secret, expiresIn: authJwtConfig.expiresIn });
+
+      return { token: `Bearer ${token}` };
     } catch (error) {
       this.loggerService.error(loggerData);
 

@@ -1,0 +1,3 @@
+email_provider:
+  default_from: "noreply@daone.in"
+  default_from_name: "Angle AI"

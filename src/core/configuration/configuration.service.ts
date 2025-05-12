@@ -25,7 +25,6 @@ export class ConfigurationService {
       apiKey,
     };
   }
-
   getRagServiceConfig() {
     const baseurl = this.configService.get('RAG_SERVICE_BASE_URL');
 
@@ -33,8 +32,26 @@ export class ConfigurationService {
   }
 
   getAuthJwtConfig() {
-    const secret = this.configService.get('JWT_SECRET');
+    const secret = this.configService.get('AUTH_JWT_SECRET');
 
     return { secret, expiresIn: '1h' };
+  }
+
+  getOtpJwtConfig() {
+    const secret = this.configService.get('OTP_JWT_SECRET');
+
+    return { secret, expiresIn: '1h' };
+  }
+
+  getEmailProviderConfig() {
+    const apiKey = this.configService.get('EMAIL_PROVIDER_KEY');
+    const defaultFrom = this.configService.get('email_provider.default_from');
+    const defaultFromName = this.configService.get('email_provider.default_from_name');
+
+    return {
+      apiKey,
+      defaultFrom,
+      defaultFromName,
+    };
   }
 }

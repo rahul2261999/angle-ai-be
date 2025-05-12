@@ -15,6 +15,9 @@ import { UserModule } from './services/user/user.module';
 import { AuthenticationModule } from './services/authentication/authentication.module';
 import { NextFunction } from 'express';
 import { AlsService } from './core/common/als/als.service';
+import { OtpModule } from './services/otp/otp.module';
+import { EmailProviderService } from './lib/email_provider/email_provider.service';
+import { EmailProviderModule } from './lib/email_provider/email_provider.module';
 
 @Module({
   imports: [
@@ -33,6 +36,8 @@ import { AlsService } from './core/common/als/als.service';
     ChatModelsModule,
     UserModule,
     AuthenticationModule,
+    OtpModule,
+    EmailProviderModule,
   ],
   controllers: [AppController],
   providers: [AppService, ChatModelService],

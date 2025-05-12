@@ -5,24 +5,19 @@ import { TenantModule } from '../tenant/tenant.module';
 import { UserModule } from '../user/user.module';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigurationModule } from '../../core/configuration/configuration.module';
-import { ConfigurationService } from '../../core/configuration/configuration.service';
-
+import { OtpModule } from '../otp/otp.module';
+import { AuthGuard } from './guard/otp-auth.guard';
+import { EmailProviderModule } from 'src/lib/email_provider/email_provider.module';
 @Module({
   imports: [
     UserModule, 
     TenantModule,
     ConfigurationModule,
-    JwtModule.registerAsync({
-      imports: [ConfigurationModule],
-      useFactory: async (configService: ConfigurationService) => ({
-        global: true,
-        secret: configService.getAuthJwtConfig().secret,
-        signOptions: { expiresIn: configService.getAuthJwtConfig().expiresIn },
-      }),
-      inject: [ConfigurationService],
-    }),
+    JwtModule.register({ global: true }),
+    OtpModule,
+    EmailProviderModule,
   ],
   controllers: [AuthenticationController],
-  providers: [AuthenticationService],
+  providers: [AuthenticationService, AuthGuard],
 })
 export class AuthenticationModule {}
